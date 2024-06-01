@@ -1,0 +1,24 @@
+version: '3.1'
+services:
+  web:
+    image: odoo:16.0
+    container_name: DBNAME
+    ports:
+      - "PORT:8069"
+    
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      - ./config:/etc/odoo
+      - ./addons:/mnt/extra-addons
+    #command: ["chown", ":odoo", "/var/run"]
+    environment:
+      - PGHOST=10.0.1.11
+      - PGPORT=5432
+      - PGUSER=USERNAME
+      - PGPASSWORD=PWORD
+      #- ODOO_MASTER_PASS=super_mot_de_passe_odoo
+      - ODOO_DATABASE=DBNAME
+    
+    restart: always
+volumes:
+  odoo-web-data:

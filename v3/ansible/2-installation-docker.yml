@@ -1,0 +1,56 @@
+---
+- name: Installation du serveur odoo
+  hosts: odoo
+  user: adminuser
+  become: true
+  gather_facts: false
+
+  tasks:
+  - name: "Installation des packets Docker"
+    apt:
+      name: "{{ item }}"
+      state: present
+      update_cache: yes
+    with_items:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+
+  - name: "Ajout de la clé GPG officiel de Docker"
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+    
+  - name: "Verification de la possetion de la clé"
+    apt_key:
+      id: 0EBFCD88
+      state: present
+    
+  - name: Configuration du répertoire
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+      state: present
+      update_cache: yes
+
+  - name: "Mise à jour du cache"
+    apt:
+      update_cache: yes
+
+  - name: "Installation de Docker"
+    apt:
+      name: docker-ce
+      state: present
+      update_cache: yes
+
+  - name: "Ajout de l'utilisateur adminuser au groupe docker"
+    user:
+      name: "adminuser"
+      group: "docker"
+      append: yes
+
+  - name: "Installation de docker-compose"
+    get_url:
+      url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+      dest: /usr/local/bin/docker-compose
+      mode: '755'

@@ -1,0 +1,30 @@
+---
+- name: Installation et Configuration du reverse proxy Nginx
+  hosts: proxypub
+  user: adminuser
+  become: true
+
+  vars_files:
+    - variables-postgresql.yml
+
+  tasks:
+    - name: "Installation de Nginx"
+      apt:
+        name: nginx
+        state: present
+
+    - name: "Déplacement fichier de configuration Nginx"
+      ansible.builtin.copy:
+        src: ./fichierNginx/default
+        dest:  /etc/nginx/sites-available/default
+
+    - name: "Déplacement fichier de configuration Nginx"
+      ansible.builtin.copy:
+        src: "./fichierTemporaire/{{ db_name }}"
+        dest:  /etc/nginx/location/
+
+    - name: "Redémarrage de Nginx"
+      service:
+        name: nginx
+        state: restarted
+        enabled: yes

@@ -1,0 +1,59 @@
+# 4-create-instance-odoo.yml
+---
+- name: Création d'un client Odoo
+  hosts: odoo
+  user: adminuser
+  become: true
+
+  vars_files:
+    - variables-postgresql.yml
+
+  tasks:
+
+  - name: "Installation de sudo"
+    apt:
+      name: sudo
+      state: present
+
+  - name: Création du fichier odoo
+    ansible.builtin.file:
+      path: "{{ db_name }}"
+      state: directory
+
+  - name: Création du fichier config
+    ansible.builtin.file:
+      path: "{{ db_name }}/config"
+      state: directory
+
+  - name: Création du fichier odoo-web-data
+    ansible.builtin.file:
+      path: "{{ db_name }}/odoo-web-data"
+      state: directory
+
+
+  - name: Déplacement fichier odoo.conf
+    ansible.builtin.copy:
+      src: ./fichierTemporaire/odoo.conf
+      dest:  "{{ db_name }}/config/"
+
+
+  - name: Déplacement fichier docker compose
+    ansible.builtin.copy:
+      src: ./fichierTemporaire/docker-compose.yml
+      dest:  "{{ db_name }}/"
+     
+  - name: Mise en route du service web
+    ansible.builtin.command: "docker-compose run web -i {{ db_name }} --stop-after-init" 
+    args:
+      chdir: "{{ db_name }}/"
+
+  - name: Shutdown du docker
+    ansible.builtin.command: docker-compose down
+    args:
+      chdir: "{{ db_name }}/"
+
+  - name: Lancement du docker
+    ansible.builtin.command: docker-compose up -d
+    args:
+      chdir: "{{ db_name }}/"
+  

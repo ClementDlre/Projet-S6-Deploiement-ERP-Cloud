@@ -1,0 +1,21 @@
+ENV['VAGRANT_EXPERIMENTAL']='disks'
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "debian/bookworm64"
+
+  config.vm.define "serveur" do |serveur|
+    serveur.vm.hostname = "serveur"
+    serveur.vm.network "private_network", ip: "192.168.60.20"
+    serveur.vm.provision "shell", inline: <<-SHELL
+    apt-get update 
+    apt-get install gpg -y
+    wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+    apt-get update 
+    apt-get install pip terraform curl pipx -y
+    pipx install --include-deps ansible
+    apt install -y ansible
+    curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+    SHELL
+  end
+end

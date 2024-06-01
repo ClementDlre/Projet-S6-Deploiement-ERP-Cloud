@@ -1,0 +1,47 @@
+---
+- name: Installation de postgresql
+  hosts: psql
+  user: adminuser
+  become: true
+
+  pre_tasks:
+    - name: "Mise à jour du cache"
+      apt:
+        update_cache: yes
+
+    - name: "Installation de postgresql"
+      apt:
+        name: postgresql
+        state: present
+
+    - name: "Installation de sudo"
+      apt:
+        name: sudo
+        state: present
+
+    - name: "Installation de pip"
+      apt:
+        name: pip
+        state: present
+
+    - name: "Installation des packets python"
+      pip: "name=psycopg2-binary  state=present"
+
+  tasks:
+    - name: "Démarage de postgresql"
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Configuration du listen addresses dans /etc/postgresql/14/main/postgresql.conf
+      ansible.builtin.command: sed -i -e "s/#listen_addresses.=.'localhost'/listen_addresses = 'localhost,10.0.1.10,10.0.1.11'/g" /etc/postgresql/14/main/postgresql.conf
+
+    - name: Ajout de postgres dans sudoers
+      ansible.builtin.command: sudo usermod -aG sudo postgres
+
+    - name: "Redémarrage de postgresql"
+      service:
+        name: postgresql
+        state: restarted
+        enabled: yes

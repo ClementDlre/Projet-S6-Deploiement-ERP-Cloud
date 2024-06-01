@@ -1,0 +1,100 @@
+---
+- name: Création d'une db pour odoo
+  hosts: psql
+  user: adminuser
+  become: true
+
+  vars_files:
+    - variables-postgresql.yml
+
+  tasks:
+    - name: "Création de l'utilisateur"
+      postgresql_user:
+        state: present
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+      vars:
+        ansible_ssh_pipelining: true
+      become: true
+      become_user: postgres 
+
+    - name: "Création de la base de donnée"
+      become: true
+      become_user: postgres
+      vars:
+        ansible_ssh_pipelining: true
+      postgresql_db:
+        state: present
+        name: "{{ db_name }}"
+        owner: "{{ db_user }}"
+
+    - name: "Accès de l'utilisateur {{ db_user }} à la base de donnée {{ db_name }}"
+      postgresql_privs:
+        type: database
+        database: "{{ db_name }}"
+        roles: "{{ db_user }}"
+        grant_option: true
+        privs: all
+      vars:
+        ansible_ssh_pipelining: true
+      become: true
+      become_user: postgres
+
+    - name: "Autorisation de la connexion de Odoo à {{ db_name }} dans pg_hba.conf"
+      postgresql_pg_hba:
+        dest: "/etc/postgresql/14/main/pg_hba.conf"
+        contype: host
+        databases: "{{ db_name }}"
+        method: md5
+        source: 10.0.1.10/24
+        users: "{{ db_user }}"
+        create: true
+      become: yes
+      become_user: postgres
+      vars:
+        ansible_ssh_pipelining: true
+    
+    - name: "Autorisation de la connexion de Odoo à postres dans pg_hba.conf"
+      postgresql_pg_hba:
+        dest: "/etc/postgresql/14/main/pg_hba.conf"
+        contype: host
+        databases: postgres
+        method: md5
+        source: 10.0.1.10/24
+        users: "{{ db_user }}"
+        create: true
+      become: yes
+      become_user: postgres
+      vars:
+        ansible_ssh_pipelining: true
+      
+    - name: "Redémarrage du service postgresql"
+      ansible.builtin.command: sudo service postgresql restart
+
+
+
+
+
+
+    #- name: "Autorisation de la connexion à la base de données pour l'utilisateur odoo"
+    #  community.postgresql.postgresql_pg_hba:
+    #    dest: "/etc/postgresql/14/main/pg_hba.conf"
+    #    contype: host
+    #    databases: "{{ db_name }}"
+    #    method: md5
+    #    source: 10.0.1.10/24
+    #    users: "{{ db_user }}"
+    #    create: true
+    #  become: yes
+    #  become_user: postgres
+    #  vars:
+    #    ansible_ssh_pipelining: true
+
+
+#    - name: "pg_hba2"
+#      ansible.builtin.command: echo "host    {{ db_name }}    {{ db_user }}    10.0.1.10/24        md5" >> /etc/postgresql/14/main/pg_hba.conf
+#      become: true
+#      become_user: postgres
+#      vars:
+#        ansible_ssh_pipelining: true
+

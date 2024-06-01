@@ -1,0 +1,26 @@
+Host proxypub
+    Hostname IPPUB
+    User adminuser
+	IdentityFile /home/vagrant/.ssh/id_rsa
+	IdentitiesOnly yes
+
+Host odoo
+	Hostname 10.0.1.10
+	User adminuser
+	IdentityFile /home/vagrant/.ssh/id_rsa
+	IdentitiesOnly yes
+	ProxyJump adminuser@IPPUB
+
+Host psql
+    Hostname 10.0.1.11
+    User adminuser
+    IdentityFile /home/vagrant/.ssh/id_rsa
+    IdentitiesOnly yes
+    ProxyJump adminuser@IPPUB
+
+Host proxypriv
+    Hostname 10.0.1.12
+    User adminuser
+    IdentityFile /home/vagrant/.ssh/id_rsa
+    IdentitiesOnly yes
+    ProxyJump adminuser@IPPUB
